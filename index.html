@@ -78,42 +78,49 @@
     textarea { min-height: 80px; resize: vertical; }
     
     .note { font-size: 12px; color: var(--muted); opacity: 0.8; margin-top: 5px; }
-    .price-display {
-        font-family: var(--mono); color: var(--gold); font-weight: bold; margin-top: 5px; font-size: 0.9em;
-    }
 
-    /* Checkbox Grid for Modules */
+    /* Módulos */
     .modules-grid {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 10px;
+        grid-template-columns: 1fr;
+        gap: 15px;
         margin-top: 10px;
     }
-    .module-item {
+    .module-card {
         background: var(--glass);
-        padding: 8px;
-        border-radius: 5px;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px solid transparent;
+        transition: 0.3s;
+    }
+    .module-card.active {
+        border-color: var(--accent1);
+        background: rgba(41, 121, 255, 0.05);
+    }
+    .module-header {
         display: flex;
         align-items: center;
         gap: 10px;
-        font-size: 13px;
         cursor: pointer;
-        transition: 0.2s;
     }
-    .module-item:hover { background: rgba(255,255,255,0.05); }
-    .module-item input { margin: 0; width: auto; cursor: pointer; }
-    .module-cost { color: var(--muted); font-size: 11px; margin-left: auto; }
+    .module-header input { width: auto; }
+    .module-info { flex-grow: 1; display: flex; justify-content: space-between; font-size: 14px; }
+    .module-desc-input {
+        margin-top: 10px;
+        display: none;
+    }
+    .module-card.active .module-desc-input { display: block; }
+
     .category-label { 
-        grid-column: 1 / -1; 
-        margin-top: 15px; 
+        margin-top: 25px; 
         color: var(--accent1); 
         font-weight: bold; 
-        font-size: 0.9em; 
+        font-size: 1em; 
         border-bottom: 1px solid rgba(255,255,255,0.1);
         padding-bottom: 5px;
+        font-family: var(--title);
     }
 
-    /* Total Cost Box */
     .total-box {
         background: rgba(41, 121, 255, 0.1);
         border: 1px solid var(--accent1);
@@ -122,7 +129,6 @@
         text-align: center;
         margin-top: 20px;
     }
-    .total-box h4 { color: var(--highlight); margin-bottom: 5px; font-family: var(--title); }
     .total-value { font-family: var(--mono); font-size: 1.5em; color: var(--gold); }
 
     #output-code {
@@ -133,17 +139,18 @@
     #copy-btn {
       width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--success);
       color: var(--panel); font-size: 1em; font-family: var(--ui); font-weight: 700;
-      cursor: pointer; transition: background 0.2s;
+      cursor: pointer; transition: 0.2s;
     }
     #copy-btn:hover { background: #00ffaa; }
 
-    @media (max-width: 600px) { .grid-2 { grid-template-columns: 1fr; } body { padding: 10px; } }
+    @media (min-width: 600px) {
+        .modules-grid { grid-template-columns: 1fr 1fr; }
+    }
   </style>
 </head>
 <body>
 
   <div class="container">
-    
     <div id="form-container">
       <fieldset>
         <legend>Dados do Comprador</legend>
@@ -177,44 +184,41 @@
               <option value="residencia" data-buy="20000000" data-rent="400000">Residência (6 Slots)</option>
               <option value="complexo" data-buy="100000000" data-rent="1000000">Complexo (12 Slots)</option>
             </select>
-            <div id="slot-info" class="note">Slots Disponíveis: 1</div>
+            <div id="slot-info" class="note">Slots: 1</div>
           </div>
         </div>
 
         <div class="grid-2">
             <div class="input-group">
               <label for="f-nome-prop">Nome da Propriedade (Flavor)</label>
-              <input type="text" id="f-nome-prop" placeholder="Ex: A Toca do Coelho, Mansão Gojo...">
+              <input type="text" id="f-nome-prop" placeholder="Ex: Mansão Zen'in">
             </div>
             <div class="input-group">
               <label for="f-local">Localização</label>
-              <input type="text" id="f-local" placeholder="Bairro, Cidade ou Ponto de Referência">
+              <input type="text" id="f-local" placeholder="Bairro, Ponto de Referência">
             </div>
         </div>
       </fieldset>
       
       <fieldset>
         <legend>Módulos & Instalações</legend>
-        <div class="note">Selecione os módulos a instalar. O custo de instalação é cobrado integralmente mesmo em aluguéis.</div>
-        
-        <div id="modules-container" class="modules-grid">
-            </div>
+        <div class="note">Selecione os módulos e descreva-os brevemente.</div>
+        <div id="modules-container" class="modules-grid"></div>
 
         <div class="input-group" style="margin-top: 20px;">
-            <label for="f-obs">Observações / Celas Especiais</label>
-            <textarea id="f-obs" placeholder="Detalhes adicionais ou especificação de Celas (Custo Variável não incluso no total automático)."></textarea>
+            <label for="f-obs">Observações Adicionais</label>
+            <textarea id="f-obs" placeholder="Algum detalhe extra que não coube nos módulos?"></textarea>
         </div>
       </fieldset>
 
       <div class="total-box">
           <h4>VALOR TOTAL A PAGAR</h4>
           <div id="total-display" class="total-value">¥ 0</div>
-          <div class="note" id="pagamento-note">Custo do Imóvel + Instalações</div>
       </div>
     </div>
 
     <div id="output-container">
-      <textarea id="output-code" readonly>Preencha o formulário acima...</textarea>
+      <textarea id="output-code" readonly></textarea>
       <button id="copy-btn">Copiar Código</button>
     </div>
   </div>
@@ -222,7 +226,6 @@
   <script>
     document.addEventListener('DOMContentLoaded', function() {
       
-      // CONFIGURAÇÃO DOS DADOS
       const modulesData = {
           "Essenciais & Conforto": [
               { name: "Quarto Simples", cost: 50000 },
@@ -256,138 +259,134 @@
 
       const container = document.getElementById('modules-container');
       
-      // Renderizar Módulos
+      // Renderizar Módulos com Campos de Descrição
       for (const [category, items] of Object.entries(modulesData)) {
           const catHeader = document.createElement('div');
           catHeader.className = 'category-label';
           catHeader.textContent = category;
           container.appendChild(catHeader);
 
-          items.forEach(mod => {
-              const label = document.createElement('label');
-              label.className = 'module-item';
-              label.innerHTML = `
-                  <input type="checkbox" class="mod-check" value="${mod.name}" data-cost="${mod.cost}">
-                  <span>${mod.name}</span>
-                  <span class="module-cost">¥ ${mod.cost.toLocaleString('pt-BR')}</span>
+          items.forEach((mod, idx) => {
+              const card = document.createElement('div');
+              card.className = 'module-card';
+              card.innerHTML = `
+                  <div class="module-header">
+                      <input type="checkbox" class="mod-check" id="mod-${category}-${idx}" data-name="${mod.name}" data-cost="${mod.cost}">
+                      <div class="module-info">
+                          <span>${mod.name}</span>
+                          <span style="color:var(--gold)">¥${mod.cost.toLocaleString('pt-BR')}</span>
+                      </div>
+                  </div>
+                  <div class="module-desc-input">
+                      <input type="text" class="mod-desc" placeholder="Descreva este local (ex: Estilo rústico, luz fraca...)">
+                  </div>
               `;
-              container.appendChild(label);
+              
+              const checkbox = card.querySelector('.mod-check');
+              checkbox.addEventListener('change', () => {
+                  card.classList.toggle('active', checkbox.checked);
+                  updateLogic();
+              });
+
+              container.appendChild(card);
           });
       }
 
-      // ELEMENTOS
-      const form = document.getElementById('form-container');
-      const copyBtn = document.getElementById('copy-btn');
-      const outputArea = document.getElementById('output-code');
-      const transacaoSelect = document.getElementById('f-transacao');
       const imovelSelect = document.getElementById('f-imovel');
+      const transacaoSelect = document.getElementById('f-transacao');
       const totalDisplay = document.getElementById('total-display');
+      const outputArea = document.getElementById('output-code');
       const slotInfo = document.getElementById('slot-info');
-      const checkboxes = document.querySelectorAll('.mod-check');
-      const storageKey = 'pedidoImoveisData_v1';
 
-      // FORMATAR MOEDA
-      const fmtMoney = (val) => "¥ " + val.toLocaleString('pt-BR');
-
-      // IFRAME RESIZER
-      const targetOrigin = 'https://goldenagejjkrpg.forumeiros.com';
-      function sendHeight() {
-        const newHeight = document.documentElement.scrollHeight;
-        window.parent.postMessage({ frameHeight: newHeight }, targetOrigin);
-      }
-      const resizeObserver = new ResizeObserver(entries => { sendHeight(); });
-      resizeObserver.observe(document.body);
-
-      // CALCULAR TOTAL E GERAR CÓDIGO
       function updateLogic() {
-          // 1. Calcular Custo Imóvel
           const selectedImovel = imovelSelect.options[imovelSelect.selectedIndex];
           const isAluguel = transacaoSelect.value === 'aluguel';
           const propertyCost = parseInt(isAluguel ? selectedImovel.getAttribute('data-rent') : selectedImovel.getAttribute('data-buy'));
           
-          // Slots Info (Visual)
-          let slots = 0;
-          if(selectedImovel.value === 'esconderijo') slots = 1;
-          else if(selectedImovel.value === 'apartamento') slots = 3;
-          else if(selectedImovel.value === 'residencia') slots = 6;
-          else if(selectedImovel.value === 'complexo') slots = 12;
-          slotInfo.textContent = `(Lembre-se: Esconderijo só permite Quarto OU Oficina)`;
-
-          // 2. Calcular Módulos
           let modulesCost = 0;
-          let selectedModulesList = [];
-          checkboxes.forEach(cb => {
+          let selectedModulesHTML = "";
+
+          document.querySelectorAll('.module-card').forEach(card => {
+              const cb = card.querySelector('.mod-check');
+              const desc = card.querySelector('.mod-desc').value.trim();
               if (cb.checked) {
                   modulesCost += parseInt(cb.getAttribute('data-cost'));
-                  selectedModulesList.push(cb.value);
+                  selectedModulesHTML += `• <b>${cb.getAttribute('data-name')}</b>${desc ? ': ' + desc : ''}<br>`;
               }
           });
 
-          // 3. Total
           const total = propertyCost + modulesCost;
-          totalDisplay.textContent = fmtMoney(total);
+          totalDisplay.textContent = "¥ " + total.toLocaleString('pt-BR');
           
-          // 4. Gerar Código BBCode
-          generateCode(selectedImovel.text, isAluguel ? "Aluguel" : "Compra", selectedModulesList, fmtMoney(total));
+          // Slots
+          const slotsMap = { "esconderijo": 1, "apartamento": 3, "residencia": 6, "complexo": 12 };
+          slotInfo.textContent = `Slots do Imóvel: ${slotsMap[imovelSelect.value]}`;
+
+          generateCode(selectedImovel.text, isAluguel ? "Aluguel" : "Compra", selectedModulesHTML, total.toLocaleString('pt-BR'));
       }
 
-      function getVal(id) { 
-        const el = document.getElementById(id); return el ? el.value.trim() : ''; 
+      function generateCode(imovelName, transacaoType, modulesHTML, totalValue) {
+          const jogador = document.getElementById('f-jogador').value || '---';
+          const personagem = document.getElementById('f-personagem').value || '---';
+          const nomeProp = document.getElementById('f-nome-prop').value || '---';
+          const local = document.getElementById('f-local').value || '---';
+          const obs = document.getElementById('f-obs').value;
+
+          let modContent = modulesHTML || 'Nenhum módulo selecionado.';
+          if(obs) modContent += `<br><b>Notas Gerais:</b> ${obs}`;
+
+          const template = `<link href="https://gaaaaaaaaabs.github.io/goldenagerepositor.io/combate.css" rel="stylesheet" type="text/css">
+<div class="avaliacao-request">
+    <div class="avaliacao-header">
+        <div class="avaliacao-title">
+            <h3>IMOBILIÁRIA - ${transacaoType.toUpperCase()}</h3>
+            <span class="avaliacao-status">Processando</span>
+        </div>
+    </div>
+    <div class="avaliacao-content">
+        <div class="avaliacao-field">
+            <span class="avaliacao-label">Cliente:</span>
+            <span class="avaliacao-value">${jogador} (${personagem})</span>
+        </div>
+        <div class="avaliacao-field">
+            <span class="avaliacao-label">Tipo:</span>
+            <span class="avaliacao-value">${transacaoType} de Imóvel</span>
+        </div>
+        <div class="avaliacao-field">
+            <span class="avaliacao-label">Propriedade:</span>
+            <span class="avaliacao-value">${imovelName}</span>
+        </div>
+        <div class="avaliacao-field">
+            <span class="avaliacao-label">Nome/Local:</span>
+            <span class="avaliacao-value">${nomeProp} — ${local}</span>
+        </div>
+        <div class="avaliacao-field full-width">
+            <span class="avaliacao-label">Módulos Detalhados:</span>
+            <div class="avaliacao-value" style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; border-left: 3px solid #2979ff; margin-top:5px;">
+                ${modContent}
+            </div>
+        </div>
+        <div class="avaliacao-footer">
+            <div class="avaliacao-master" style="font-size: 1.2em;">
+                <b>Total a Pagar:</b> <span style="color: #ffd700;">¥ ${totalValue}</span>
+            </div>
+        </div>
+    </div>
+</div>`;
+
+          outputArea.value = template;
       }
 
-      function generateCode(imovelName, transacaoType, modulesList, totalValue) {
-        const jogador = getVal('f-jogador') || 'Seu Nick';
-        const personagem = getVal('f-personagem') || 'Nome do Personagem';
-        const nomeProp = getVal('f-nome-prop') || 'Nome da Propriedade';
-        const local = getVal('f-local') || 'Localização';
-        const obs = getVal('f-obs');
-
-        let modString = modulesList.length > 0 ? modulesList.join('<br>') : 'Nenhum módulo inicial.';
-        if(obs) modString += `<br><br><b>Obs:</b> ${obs}`;
-
-        const template = `<link href="https://gaaaaaaaaabs.github.io/goldenagerepositor.io/combate.css" rel="stylesheet" type="text/css"> <div class="avaliacao-request"> <div class="avaliacao-header"> <div class="avaliacao-title"> <h3>IMOBILIÁRIA - ${transacaoType.toUpperCase()}</h3> <span class="avaliacao-status" data-status="1">Processando</span> </div> </div> <div class="avaliacao-content"> <div class="avaliacao-field"> <span class="avaliacao-label">Cliente:</span> <span class="avaliacao-value">${jogador} (${personagem})</span> </div> <div class="avaliacao-field"> <span class="avaliacao-label">Tipo:</span> <span class="avaliacao-value">${transacaoType} de Imóvel</span> </div> <div class="avaliacao-field"> <span class="avaliacao-label">Propriedade:</span> <span class="avaliacao-value">${imovelName}</span> </div> <div class="avaliacao-field"> <span class="avaliacao-label">Nome/Local:</span> <span class="avaliacao-value">${nomeProp} — ${local}</span> </div> <div class="avaliacao-field full-width"> <span class="avaliacao-label">Módulos & Instalações:</span> <span class="avaliacao-value">${modString}</span> </div> <div class="avaliacao-footer"> <div class="avaliacao-master" style="font-size: 1.1em; border-bottom: none;"> <b>Valor Total da Transação:</b> <span style="color: #ffd700;">${totalValue}</span> </div> </div> </div> </div> <style> .avaliacao-request { background: linear-gradient(135deg, #1a1a2e 0%, #0c0c1a 100%); border: 2px solid #2979ff; border-radius: 10px; margin: 15px 0; overflow: hidden; color: #e7e9ff; font-family: Arial, sans-serif; } .avaliacao-header { background: rgba(41, 121, 255, 0.2); padding: 15px 20px; border-bottom: 1px solid #333; } .avaliacao-title { display: flex; justify-content: space-between; align-items: center; } .avaliacao-title h3 { margin: 0; color: #82b1ff; font-size: 1.3em; } .avaliacao-status { background: #2979ff; color: white; padding: 5px 10px; border-radius: 4px; font-size: 0.9em; font-weight: bold; } .avaliacao-content { padding: 20px; } .avaliacao-field { display: flex; margin-bottom: 12px; align-items: flex-start; } .avaliacao-field.full-width { flex-direction: column; } .avaliacao-label { font-weight: bold; width: 140px; flex-shrink: 0; color: #bfc6e6; } .avaliacao-value { color: #82b1ff; flex: 1; } .avaliacao-field.full-width .avaliacao-value { margin-top: 5px; background: rgba(0, 0, 0, 0.2); padding: 10px; border-radius: 4px; border-left: 3px solid #2979ff; } .avaliacao-footer { background: rgba(0, 0, 0, 0.3); padding: 12px 20px; border-top: 1px solid #333; text-align: center; } </style>`;
-
-        outputArea.value = template;
-      }
-
-      // STORAGE
-      function saveData() {
-        const data = {};
-        document.querySelectorAll('input[type="text"], select, textarea').forEach(el => {
-           if(el.id) data[el.id] = el.value;
-        });
-        // Salvar checkboxes é mais chato, vou pular pra manter simples, ou salvar array
-        localStorage.setItem(storageKey, JSON.stringify(data));
-      }
-
-      function loadData() {
-        try {
-          const data = JSON.parse(localStorage.getItem(storageKey));
-          if(data) {
-             for(const key in data) {
-                 const el = document.getElementById(key);
-                 if(el) el.value = data[key];
-             }
-          }
-        } catch(e){}
-        updateLogic();
-      }
-
-      // EVENTS
-      form.addEventListener('input', () => { updateLogic(); saveData(); sendHeight(); });
-      form.addEventListener('change', () => { updateLogic(); saveData(); sendHeight(); });
-      
-      copyBtn.addEventListener('click', function() {
-        outputArea.select();
-        document.execCommand('copy');
-        const originalText = copyBtn.textContent;
-        copyBtn.textContent = 'Copiado!';
-        setTimeout(() => { copyBtn.textContent = originalText; }, 2000);
+      // Eventos
+      document.getElementById('form-container').addEventListener('input', updateLogic);
+      document.getElementById('copy-btn').addEventListener('click', function() {
+          outputArea.select();
+          document.execCommand('copy');
+          this.textContent = 'Copiado!';
+          setTimeout(() => this.textContent = 'Copiar Código', 2000);
       });
 
-      // INIT
-      loadData();
-      setTimeout(sendHeight, 200);
+      updateLogic();
     });
   </script>
 </body>
