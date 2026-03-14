@@ -29,7 +29,7 @@
       line-height: 1.6;
       padding: 20px;
       min-height: 100vh;
-      overflow-x: hidden; /* Evita scrolls horizontais chatos */
+      overflow-x: hidden;
     }
     .container { max-width: 900px; margin: 0 auto; }
     
@@ -332,29 +332,65 @@
           const obs = document.getElementById('f-obs').value;
 
           let modContent = modulesHTML || 'Nenhum módulo selecionado.';
-          if(obs) modContent += `<br><b>Notas Gerais:</b> ${obs}`;
+          if(obs) modContent += `<br><br><div class="quest-special"><b>NOTAS ADICIONAIS:</b><br>${obs}</div>`;
 
-          const template = `<link href="https://gaaaaaaaaabs.github.io/goldenagerepositor.io/combate.css" rel="stylesheet" type="text/css"><div class="avaliacao-request"><div class="avaliacao-header"><div class="avaliacao-title"><h3>IMOBILIÁRIA - ${transacaoType.toUpperCase()}</h3><span class="avaliacao-status">Processando</span></div></div><div class="avaliacao-content"><div class="avaliacao-field"><span class="avaliacao-label">Cliente:</span><span class="avaliacao-value">${jogador} (${personagem})</span></div><div class="avaliacao-field"><span class="avaliacao-label">Tipo:</span><span class="avaliacao-value">${transacaoType} de Imóvel</span></div><div class="avaliacao-field"><span class="avaliacao-label">Propriedade:</span><span class="avaliacao-value">${imovelName}</span></div><div class="avaliacao-field"><span class="avaliacao-label">Nome/Local:</span><span class="avaliacao-value">${nomeProp} — ${local}</span></div><div class="avaliacao-field full-width"><span class="avaliacao-label">Módulos Detalhados:</span><div class="avaliacao-value" style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; border-left: 3px solid #2979ff; margin-top:5px;">${modContent}</div></div><div class="avaliacao-footer"><div class="avaliacao-master" style="font-size: 1.2em;"><b>Total a Pagar:</b> <span style="color: #ffd700;">¥ ${totalValue}</span></div></div></div></div>`;
+          const template = `<div class="combat-container">
+    <div class="combat-header" style="min-height: 120px; padding: 20px;">
+        <div class="combat-header-content">
+            <h1 style="font-size: 2.5em;">IMOBILIÁRIA</h1>
+            <p>${transacaoType.toUpperCase()} DE PROPRIEDADE</p>
+        </div>
+        <div class="combat-icon-deco" style="bottom: -35px; --custom-kanji: '家';"></div>
+    </div>
+
+    <div class="combat-content" style="padding-top: 50px;">
+        <section>
+            <h2>${nomeProp}</h2>
+            <div class="info-grid-2col">
+                <div class="info-card">
+                    <div class="info-title">CLIENTE</div>
+                    <div class="info-content">${jogador} (${personagem})</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-title">LOCALIZAÇÃO</div>
+                    <div class="info-content">${local}</div>
+                </div>
+                <div class="info-card">
+                    <div class="info-title">TIPO DE IMÓVEL</div>
+                    <div class="info-content">${imovelName}</div>
+                </div>
+                <div class="info-card" style="border-left-color: #ffd700;">
+                    <div class="info-title">VALOR DA TRANSAÇÃO</div>
+                    <div class="info-value" style="color: #ffd700; font-size: 1.2em;">¥ ${totalValue}</div>
+                </div>
+            </div>
+
+            <h3 style="margin-top: 30px; border-bottom: 1px solid var(--combat-glass-border); padding-bottom: 10px;">MÓDULOS E INSTALAÇÕES</h3>
+            <div class="quest-item" style="margin-top: 15px; background: rgba(155, 0, 255, 0.05);">
+                <div class="quest-content">
+                    <p style="margin: 0; color: var(--combat-text-primary);">
+                        ${modContent}
+                    </p>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>`;
 
           outputArea.value = template;
       }
 
-      // --- CÓDIGO DE REDIMENSIONAMENTO ---
       function sendHeight() {
           const height = document.body.scrollHeight;
           window.parent.postMessage({ frameHeight: height }, '*');
       }
 
-      // Escuta mudanças em qualquer input para avisar o fórum que o tamanho mudou
       document.getElementById('form-container').addEventListener('input', () => {
           updateLogic();
           sendHeight();
       });
 
-      // Envia a altura inicial após carregar tudo
       window.addEventListener('load', sendHeight);
-      
-      // Observador para mudanças automáticas de layout
       const ro = new ResizeObserver(() => sendHeight());
       ro.observe(document.body);
 
