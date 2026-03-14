@@ -29,6 +29,7 @@
       line-height: 1.6;
       padding: 20px;
       min-height: 100vh;
+      overflow-x: hidden; /* Evita scrolls horizontais chatos */
     }
     .container { max-width: 900px; margin: 0 auto; }
     
@@ -259,7 +260,6 @@
 
       const container = document.getElementById('modules-container');
       
-      // Renderizar Módulos com Campos de Descrição
       for (const [category, items] of Object.entries(modulesData)) {
           const catHeader = document.createElement('div');
           catHeader.className = 'category-label';
@@ -271,14 +271,14 @@
               card.className = 'module-card';
               card.innerHTML = `
                   <div class="module-header">
-                      <input type="checkbox" class="mod-check" id="mod-${category}-${idx}" data-name="${mod.name}" data-cost="${mod.cost}">
+                      <input type="checkbox" class="mod-check" id="mod-${category.replace(/\s+/g, '')}-${idx}" data-name="${mod.name}" data-cost="${mod.cost}">
                       <div class="module-info">
                           <span>${mod.name}</span>
                           <span style="color:var(--gold)">¥${mod.cost.toLocaleString('pt-BR')}</span>
                       </div>
                   </div>
                   <div class="module-desc-input">
-                      <input type="text" class="mod-desc" placeholder="Descreva este local (ex: Estilo rústico, luz fraca...)">
+                      <input type="text" class="mod-desc" placeholder="Descreva este local...">
                   </div>
               `;
               
@@ -318,7 +318,6 @@
           const total = propertyCost + modulesCost;
           totalDisplay.textContent = "¥ " + total.toLocaleString('pt-BR');
           
-          // Slots
           const slotsMap = { "esconderijo": 1, "apartamento": 3, "residencia": 6, "complexo": 12 };
           slotInfo.textContent = `Slots do Imóvel: ${slotsMap[imovelSelect.value]}`;
 
@@ -335,50 +334,30 @@
           let modContent = modulesHTML || 'Nenhum módulo selecionado.';
           if(obs) modContent += `<br><b>Notas Gerais:</b> ${obs}`;
 
-          const template = `<link href="https://gaaaaaaaaabs.github.io/goldenagerepositor.io/combate.css" rel="stylesheet" type="text/css">
-<div class="avaliacao-request">
-    <div class="avaliacao-header">
-        <div class="avaliacao-title">
-            <h3>IMOBILIÁRIA - ${transacaoType.toUpperCase()}</h3>
-            <span class="avaliacao-status">Processando</span>
-        </div>
-    </div>
-    <div class="avaliacao-content">
-        <div class="avaliacao-field">
-            <span class="avaliacao-label">Cliente:</span>
-            <span class="avaliacao-value">${jogador} (${personagem})</span>
-        </div>
-        <div class="avaliacao-field">
-            <span class="avaliacao-label">Tipo:</span>
-            <span class="avaliacao-value">${transacaoType} de Imóvel</span>
-        </div>
-        <div class="avaliacao-field">
-            <span class="avaliacao-label">Propriedade:</span>
-            <span class="avaliacao-value">${imovelName}</span>
-        </div>
-        <div class="avaliacao-field">
-            <span class="avaliacao-label">Nome/Local:</span>
-            <span class="avaliacao-value">${nomeProp} — ${local}</span>
-        </div>
-        <div class="avaliacao-field full-width">
-            <span class="avaliacao-label">Módulos Detalhados:</span>
-            <div class="avaliacao-value" style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; border-left: 3px solid #2979ff; margin-top:5px;">
-                ${modContent}
-            </div>
-        </div>
-        <div class="avaliacao-footer">
-            <div class="avaliacao-master" style="font-size: 1.2em;">
-                <b>Total a Pagar:</b> <span style="color: #ffd700;">¥ ${totalValue}</span>
-            </div>
-        </div>
-    </div>
-</div>`;
+          const template = `<link href="https://gaaaaaaaaabs.github.io/goldenagerepositor.io/combate.css" rel="stylesheet" type="text/css"><div class="avaliacao-request"><div class="avaliacao-header"><div class="avaliacao-title"><h3>IMOBILIÁRIA - ${transacaoType.toUpperCase()}</h3><span class="avaliacao-status">Processando</span></div></div><div class="avaliacao-content"><div class="avaliacao-field"><span class="avaliacao-label">Cliente:</span><span class="avaliacao-value">${jogador} (${personagem})</span></div><div class="avaliacao-field"><span class="avaliacao-label">Tipo:</span><span class="avaliacao-value">${transacaoType} de Imóvel</span></div><div class="avaliacao-field"><span class="avaliacao-label">Propriedade:</span><span class="avaliacao-value">${imovelName}</span></div><div class="avaliacao-field"><span class="avaliacao-label">Nome/Local:</span><span class="avaliacao-value">${nomeProp} — ${local}</span></div><div class="avaliacao-field full-width"><span class="avaliacao-label">Módulos Detalhados:</span><div class="avaliacao-value" style="background: rgba(0,0,0,0.2); padding: 10px; border-radius: 4px; border-left: 3px solid #2979ff; margin-top:5px;">${modContent}</div></div><div class="avaliacao-footer"><div class="avaliacao-master" style="font-size: 1.2em;"><b>Total a Pagar:</b> <span style="color: #ffd700;">¥ ${totalValue}</span></div></div></div></div>`;
 
           outputArea.value = template;
       }
 
-      // Eventos
-      document.getElementById('form-container').addEventListener('input', updateLogic);
+      // --- CÓDIGO DE REDIMENSIONAMENTO ---
+      function sendHeight() {
+          const height = document.body.scrollHeight;
+          window.parent.postMessage({ frameHeight: height }, '*');
+      }
+
+      // Escuta mudanças em qualquer input para avisar o fórum que o tamanho mudou
+      document.getElementById('form-container').addEventListener('input', () => {
+          updateLogic();
+          sendHeight();
+      });
+
+      // Envia a altura inicial após carregar tudo
+      window.addEventListener('load', sendHeight);
+      
+      // Observador para mudanças automáticas de layout
+      const ro = new ResizeObserver(() => sendHeight());
+      ro.observe(document.body);
+
       document.getElementById('copy-btn').addEventListener('click', function() {
           outputArea.select();
           document.execCommand('copy');
