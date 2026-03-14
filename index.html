@@ -80,7 +80,6 @@
     
     .note { font-size: 12px; color: var(--muted); opacity: 0.8; margin-top: 5px; }
 
-    /* Módulos */
     .modules-grid {
         display: grid;
         grid-template-columns: 1fr;
@@ -203,12 +202,10 @@
       
       <fieldset>
         <legend>Módulos & Instalações</legend>
-        <div class="note">Selecione os módulos e descreva-os brevemente.</div>
         <div id="modules-container" class="modules-grid"></div>
-
         <div class="input-group" style="margin-top: 20px;">
             <label for="f-obs">Observações Adicionais</label>
-            <textarea id="f-obs" placeholder="Algum detalhe extra que não coube nos módulos?"></textarea>
+            <textarea id="f-obs" placeholder="Detalhes extras..."></textarea>
         </div>
       </fieldset>
 
@@ -226,181 +223,76 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', function() {
-      
       const modulesData = {
           "Essenciais & Conforto": [
-              { name: "Quarto Simples", cost: 50000 },
-              { name: "Suíte Master", cost: 300000 },
-              { name: "Cozinha Básica", cost: 100000 },
-              { name: "Cozinha Gourmet", cost: 400000 },
+              { name: "Quarto Simples", cost: 50000 }, { name: "Suíte Master", cost: 300000 },
+              { name: "Cozinha Básica", cost: 100000 }, { name: "Cozinha Gourmet", cost: 400000 },
               { name: "Onsen (Termas)", cost: 1500000 }
           ],
           "Treino & Estudos": [
-              { name: "Dojo Marcial", cost: 400000 },
-              { name: "Sala de Meditação", cost: 400000 },
-              { name: "Biblioteca Oculta", cost: 300000 },
-              { name: "Sala de Estudos", cost: 200000 },
-              { name: "Campo de Tiro", cost: 600000 },
-              { name: "Jardim de Ervas", cost: 300000 }
+              { name: "Dojo Marcial", cost: 400000 }, { name: "Sala de Meditação", cost: 400000 },
+              { name: "Biblioteca Oculta", cost: 300000 }, { name: "Sala de Estudos", cost: 200000 },
+              { name: "Campo de Tiro", cost: 600000 }, { name: "Jardim de Ervas", cost: 300000 }
           ],
           "Ofício & Suporte": [
-              { name: "Oficina / Ateliê", cost: 600000 },
-              { name: "Laboratório", cost: 1000000 },
-              { name: "Enfermaria", cost: 800000 },
-              { name: "Garagem", cost: 200000 },
+              { name: "Oficina / Ateliê", cost: 600000 }, { name: "Laboratório", cost: 1000000 },
+              { name: "Enfermaria", cost: 800000 }, { name: "Garagem", cost: 200000 },
               { name: "Gerador Autônomo", cost: 500000 }
           ],
           "Segurança & Contenção": [
-              { name: "Arsenal Seguro", cost: 200000 },
-              { name: "Sala de Vigilância", cost: 400000 },
-              { name: "Quarto do Pânico", cost: 1000000 },
-              { name: "Rota de Fuga", cost: 300000 }
+              { name: "Arsenal Seguro", cost: 200000 }, { name: "Sala de Vigilância", cost: 400000 },
+              { name: "Quarto do Pânico", cost: 1000000 }, { name: "Rota de Fuga", cost: 300000 }
           ]
       };
 
       const container = document.getElementById('modules-container');
-      
       for (const [category, items] of Object.entries(modulesData)) {
           const catHeader = document.createElement('div');
           catHeader.className = 'category-label';
           catHeader.textContent = category;
           container.appendChild(catHeader);
-
           items.forEach((mod, idx) => {
               const card = document.createElement('div');
               card.className = 'module-card';
-              card.innerHTML = `
-                  <div class="module-header">
-                      <input type="checkbox" class="mod-check" id="mod-${category.replace(/\s+/g, '')}-${idx}" data-name="${mod.name}" data-cost="${mod.cost}">
-                      <div class="module-info">
-                          <span>${mod.name}</span>
-                          <span style="color:var(--gold)">¥${mod.cost.toLocaleString('pt-BR')}</span>
-                      </div>
-                  </div>
-                  <div class="module-desc-input">
-                      <input type="text" class="mod-desc" placeholder="Descreva este local...">
-                  </div>
-              `;
-              
+              card.innerHTML = `<div class="module-header"><input type="checkbox" class="mod-check" data-name="${mod.name}" data-cost="${mod.cost}"><div class="module-info"><span>${mod.name}</span><span style="color:var(--gold)">¥${mod.cost.toLocaleString('pt-BR')}</span></div></div><div class="module-desc-input"><input type="text" class="mod-desc" placeholder="Descreva este local..."></div>`;
               const checkbox = card.querySelector('.mod-check');
-              checkbox.addEventListener('change', () => {
-                  card.classList.toggle('active', checkbox.checked);
-                  updateLogic();
-              });
-
+              checkbox.addEventListener('change', () => { card.classList.toggle('active', checkbox.checked); updateLogic(); });
               container.appendChild(card);
           });
       }
 
-      const imovelSelect = document.getElementById('f-imovel');
-      const transacaoSelect = document.getElementById('f-transacao');
-      const totalDisplay = document.getElementById('total-display');
-      const outputArea = document.getElementById('output-code');
-      const slotInfo = document.getElementById('slot-info');
-
       function updateLogic() {
-          const selectedImovel = imovelSelect.options[imovelSelect.selectedIndex];
-          const isAluguel = transacaoSelect.value === 'aluguel';
-          const propertyCost = parseInt(isAluguel ? selectedImovel.getAttribute('data-rent') : selectedImovel.getAttribute('data-buy'));
-          
-          let modulesCost = 0;
-          let selectedModulesHTML = "";
-
+          const imovel = document.getElementById('f-imovel');
+          const trans = document.getElementById('f-transacao');
+          const isAluguel = trans.value === 'aluguel';
+          const propertyCost = parseInt(isAluguel ? imovel.options[imovel.selectedIndex].getAttribute('data-rent') : imovel.options[imovel.selectedIndex].getAttribute('data-buy'));
+          let modulesCost = 0, modHTML = "";
           document.querySelectorAll('.module-card').forEach(card => {
-              const cb = card.querySelector('.mod-check');
-              const desc = card.querySelector('.mod-desc').value.trim();
-              if (cb.checked) {
-                  modulesCost += parseInt(cb.getAttribute('data-cost'));
-                  selectedModulesHTML += `• <b>${cb.getAttribute('data-name')}</b>${desc ? ': ' + desc : ''}<br>`;
-              }
+              const cb = card.querySelector('.mod-check'), desc = card.querySelector('.mod-desc').value.trim();
+              if (cb.checked) { modulesCost += parseInt(cb.getAttribute('data-cost')); modHTML += `• <b>${cb.getAttribute('data-name')}</b>${desc ? ': ' + desc : ''}<br>`; }
           });
-
           const total = propertyCost + modulesCost;
-          totalDisplay.textContent = "¥ " + total.toLocaleString('pt-BR');
-          
-          const slotsMap = { "esconderijo": 1, "apartamento": 3, "residencia": 6, "complexo": 12 };
-          slotInfo.textContent = `Slots do Imóvel: ${slotsMap[imovelSelect.value]}`;
-
-          generateCode(selectedImovel.text, isAluguel ? "Aluguel" : "Compra", selectedModulesHTML, total.toLocaleString('pt-BR'));
-      }
-
-      function generateCode(imovelName, transacaoType, modulesHTML, totalValue) {
-          const jogador = document.getElementById('f-jogador').value || '---';
-          const personagem = document.getElementById('f-personagem').value || '---';
-          const nomeProp = document.getElementById('f-nome-prop').value || '---';
-          const local = document.getElementById('f-local').value || '---';
-          const obs = document.getElementById('f-obs').value;
-
-          let modContent = modulesHTML || 'Nenhum módulo selecionado.';
-          if(obs) modContent += `<br><br><div class="quest-special"><b>NOTAS ADICIONAIS:</b><br>${obs}</div>`;
-
-          const template = `<div class="combat-container">
-    <div class="combat-header" style="min-height: 120px; padding: 20px;">
-        <div class="combat-header-content">
-            <h1 style="font-size: 2.5em;">IMOBILIÁRIA</h1>
-            <p>${transacaoType.toUpperCase()} DE PROPRIEDADE</p>
-        </div>
-        <div class="combat-icon-deco" style="bottom: -35px; --custom-kanji: '家';"></div>
-    </div>
-
-    <div class="combat-content" style="padding-top: 50px;">
-        <section>
-            <h2>${nomeProp}</h2>
-            <div class="info-grid-2col">
-                <div class="info-card">
-                    <div class="info-title">CLIENTE</div>
-                    <div class="info-content">${jogador} (${personagem})</div>
-                </div>
-                <div class="info-card">
-                    <div class="info-title">LOCALIZAÇÃO</div>
-                    <div class="info-content">${local}</div>
-                </div>
-                <div class="info-card">
-                    <div class="info-title">TIPO DE IMÓVEL</div>
-                    <div class="info-content">${imovelName}</div>
-                </div>
-                <div class="info-card" style="border-left-color: #ffd700;">
-                    <div class="info-title">VALOR DA TRANSAÇÃO</div>
-                    <div class="info-value" style="color: #ffd700; font-size: 1.2em;">¥ ${totalValue}</div>
-                </div>
-            </div>
-
-            <h3 style="margin-top: 30px; border-bottom: 1px solid var(--combat-glass-border); padding-bottom: 10px;">MÓDULOS E INSTALAÇÕES</h3>
-            <div class="quest-item" style="margin-top: 15px; background: rgba(155, 0, 255, 0.05);">
-                <div class="quest-content">
-                    <p style="margin: 0; color: var(--combat-text-primary);">
-                        ${modContent}
-                    </p>
-                </div>
-            </div>
-        </section>
-    </div>
-</div>`;
-
-          outputArea.value = template;
-      }
-
-      function sendHeight() {
-          const height = document.body.scrollHeight;
-          window.parent.postMessage({ frameHeight: height }, '*');
-      }
-
-      document.getElementById('form-container').addEventListener('input', () => {
-          updateLogic();
+          document.getElementById('total-display').textContent = "¥ " + total.toLocaleString('pt-BR');
+          generateCode(imovel.options[imovel.selectedIndex].text, trans.value, modHTML, total.toLocaleString('pt-BR'));
           sendHeight();
-      });
+      }
 
+      function generateCode(imovelName, transType, modHTML, totalVal) {
+          const jog = document.getElementById('f-jogador').value || '---', per = document.getElementById('f-personagem').value || '---', prop = document.getElementById('f-nome-prop').value || '---', loc = document.getElementById('f-local').value || '---', obs = document.getElementById('f-obs').value;
+          let content = modHTML || 'Nenhum módulo.';
+          if(obs) content += `<br><br><div class="quest-special"><b>NOTAS ADICIONAIS:</b><br>${obs}</div>`;
+          const template = `<div class="combat-container" style="display:block;width:100%;"><div class="combat-header" style="min-height:120px;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div class="combat-header-content" style="position:relative;z-index:5;"><h1 style="font-family:'Yuji Syuku',serif;font-size:2.5em;margin:0;color:#fff;text-shadow:0 0 20px #9b00ff;">IMOBILIÁRIA</h1><p style="margin:0;color:#bfc6e6;font-style:italic;">${transType.toUpperCase()} DE PROPRIEDADE</p></div><div class="combat-icon-deco" style="bottom:-35px;--custom-kanji:'家';"></div></div><div class="combat-content" style="padding:50px 30px 30px 30px;display:block;"><section style="display:block;width:100%;"><h2 style="font-family:'Yuji Syuku',serif;font-size:2.2em;color:#c48fff;border-bottom:2px solid #9b00ff;padding-bottom:10px;margin-bottom:20px;">${prop}</h2><div class="info-grid-2col" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:30px;"><div class="info-card"><div class="info-title">CLIENTE</div><div class="info-content">${jog} (${per})</div></div><div class="info-card"><div class="info-title">LOCALIZAÇÃO</div><div class="info-content">${loc}</div></div><div class="info-card"><div class="info-title">TIPO DE IMÓVEL</div><div class="info-content">${imovelName}</div></div><div class="info-card" style="border-left-color:#ffd700;"><div class="info-title">VALOR TOTAL</div><div class="info-value" style="color:#ffd700;font-size:1.2em;font-weight:bold;">¥ ${totalVal}</div></div></div><h3 style="font-family:'Yuji Syuku',serif;font-size:1.6em;color:#e7e9ff;margin-bottom:15px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">MÓDULOS E INSTALAÇÕES</h3><div class="quest-item" style="background:rgba(155,0,255,0.05);border:1px solid rgba(255,255,255,0.08);padding:20px;border-radius:8px;"><div class="quest-content" style="color:#bfc6e6;line-height:1.6;">${content}</div></div></section></div></div>`;
+          document.getElementById('output-code').value = template.replace(/\s\s+/g, ' ');
+      }
+
+      function sendHeight() { window.parent.postMessage({ frameHeight: document.body.scrollHeight }, '*'); }
+      document.getElementById('form-container').addEventListener('input', updateLogic);
       window.addEventListener('load', sendHeight);
-      const ro = new ResizeObserver(() => sendHeight());
-      ro.observe(document.body);
-
+      new ResizeObserver(sendHeight).observe(document.body);
       document.getElementById('copy-btn').addEventListener('click', function() {
-          outputArea.select();
-          document.execCommand('copy');
-          this.textContent = 'Copiado!';
-          setTimeout(() => this.textContent = 'Copiar Código', 2000);
+          const area = document.getElementById('output-code'); area.select(); document.execCommand('copy');
+          this.textContent = 'Copiado!'; setTimeout(() => this.textContent = 'Copiar Código', 2000);
       });
-
       updateLogic();
     });
   </script>
