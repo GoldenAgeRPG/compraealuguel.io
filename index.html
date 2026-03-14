@@ -19,7 +19,7 @@
     label { font-weight: 500; font-size: 11px; color: var(--muted); text-transform: uppercase; font-family: var(--mono); }
     input, textarea, select { background: var(--bg); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 6px; padding: 10px; color: var(--text); font-family: var(--ui); font-size: 14px; width: 100%; }
     textarea { min-height: 80px; resize: vertical; }
-    .topics-area { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 6px; }
+    .subf-area { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; padding: 15px; background: rgba(0,0,0,0.2); border-radius: 6px; }
     .modules-grid { display: grid; grid-template-columns: 1fr; gap: 15px; margin-top: 10px; }
     .module-card { background: var(--glass); padding: 15px; border-radius: 8px; border: 1px solid transparent; transition: 0.3s; }
     .module-card.active { border-color: var(--accent1); background: rgba(212, 175, 55, 0.05); }
@@ -34,7 +34,7 @@
     #output-code { width: 100%; height: 150px; background: var(--bg); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 8px; padding: 15px; color: var(--muted); font-family: var(--mono); font-size: 12px; resize: vertical; margin-bottom: 10px; }
     #copy-btn { width: 100%; padding: 12px; border: none; border-radius: 8px; background: var(--accent1); color: #000; font-size: 1em; font-family: var(--ui); font-weight: 700; cursor: pointer; transition: 0.2s; }
     #copy-btn:hover { background: #fff; }
-    @media (max-width: 600px) { .topics-area { grid-template-columns: 1fr; } .modules-grid { grid-template-columns: 1fr; } }
+    @media (max-width: 600px) { .subf-area { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
@@ -57,20 +57,20 @@
           <div class="input-group">
             <label>Tipo de Imóvel</label>
             <select id="f-imovel">
-              <option value="esconderijo" data-buy="500000" data-rent="20000" data-topics="1">Esconderijo (1 Tópico Único)</option>
-              <option value="apartamento" data-buy="5000000" data-rent="100000" data-topics="3">Apartamento (3 Tópicos)</option>
-              <option value="residencia" data-buy="20000000" data-rent="400000" data-topics="6">Residência (2 Andares - 6 Tópicos)</option>
-              <option value="complexo" data-buy="100000000" data-rent="1000000" data-topics="12">Complexo (4 Alas - 12 Tópicos)</option>
+              <option value="esconderijo" data-buy="500000" data-rent="20000" data-subs="0" data-type="topico">Esconderijo (1 Tópico Único)</option>
+              <option value="apartamento" data-buy="5000000" data-rent="100000" data-subs="1" data-type="subforum">Apartamento (1 Subfórum - 3 Tópicos)</option>
+              <option value="residencia" data-buy="20000000" data-rent="400000" data-subs="2" data-type="subforum">Residência (2 Subfóruns - 6 Tópicos)</option>
+              <option value="complexo" data-buy="100000000" data-rent="1000000" data-subs="4" data-type="subforum">Complexo (4 Subfóruns - 12 Tópicos)</option>
             </select>
           </div>
         </div>
         <div class="grid-2">
             <div class="input-group"><label>Nome da Propriedade</label><input type="text" id="f-nome-prop" placeholder="Ex: Mansão Zen'in"></div>
-            <div class="input-group"><label>Localização Geral</label><input type="text" id="f-local" placeholder="Ex: Kyoto"></div>
+            <div class="input-group"><label>Localização Geral</label><input type="text" id="f-local" placeholder="Ex: Shibuya"></div>
         </div>
-        <div id="topics-setup">
-          <label style="margin-top:10px; display:block;">Nomear Tópicos/Áreas:</label>
-          <div id="topics-list" class="topics-area"></div>
+        <div id="subforums-setup">
+          <label id="label-subf" style="margin-top:10px; display:block;">Nomear Subfóruns:</label>
+          <div id="subf-list" class="subf-area"></div>
         </div>
       </fieldset>
       <fieldset>
@@ -78,7 +78,7 @@
         <div id="modules-container" class="modules-grid"></div>
         <div class="input-group" style="margin-top: 20px;">
             <label>Observações Adicionais</label>
-            <textarea id="f-obs" placeholder="Notas para o pedido..."></textarea>
+            <textarea id="f-obs" placeholder="Notas para o mestre..."></textarea>
         </div>
       </fieldset>
       <div class="total-box"><h4>TOTAL</h4><div id="total-display" class="total-value">¥ 0</div></div>
@@ -122,34 +122,46 @@
       };
 
       const container = document.getElementById('modules-container');
-      const topicsList = document.getElementById('topics-list');
+      const subfList = document.getElementById('subf-list');
       const imovelSelect = document.getElementById('f-imovel');
 
-      function updateTopicsInputs() {
-        const count = parseInt(imovelSelect.options[imovelSelect.selectedIndex].getAttribute('data-topics'));
-        topicsList.innerHTML = '';
-        for(let i=1; i<=count; i++) {
-          const div = document.createElement('div');
-          div.className = 'input-group';
-          div.innerHTML = `<label>Tópico ${i}</label><input type="text" class="topic-name-input" placeholder="Nome da Área" value="Área ${i}">`;
-          topicsList.appendChild(div);
+      function updateSubfInputs() {
+        const opt = imovelSelect.options[imovelSelect.selectedIndex];
+        const subsCount = parseInt(opt.getAttribute('data-subs'));
+        const type = opt.getAttribute('data-type');
+        subfList.innerHTML = '';
+        if(type === 'topico') {
+          document.getElementById('label-subf').style.display = 'none';
+        } else {
+          document.getElementById('label-subf').style.display = 'block';
+          for(let i=1; i<=subsCount; i++) {
+            const div = document.createElement('div');
+            div.className = 'input-group';
+            div.innerHTML = `<label>Subfórum ${i}</label><input type="text" class="subf-name-input" placeholder="Ex: Ala Norte" value="Subfórum ${i}">`;
+            subfList.appendChild(div);
+          }
         }
-        updateModuleSelects();
+        updateModuleAloc();
       }
 
-      function updateModuleSelects() {
-        const topicInputs = document.querySelectorAll('.topic-name-input');
-        const selects = document.querySelectorAll('.mod-topic-select');
-        selects.forEach(select => {
-          const currentVal = select.value;
-          select.innerHTML = '';
-          topicInputs.forEach(input => {
-            const opt = document.createElement('option');
-            opt.value = input.value;
-            opt.textContent = input.value;
-            select.appendChild(opt);
-          });
-          select.value = currentVal || topicInputs[0]?.value;
+      function updateModuleAloc() {
+        const subInputs = document.querySelectorAll('.subf-name-input');
+        const selects = document.querySelectorAll('.mod-aloc-select');
+        selects.forEach(sel => {
+          const current = sel.value;
+          sel.innerHTML = '';
+          if(subInputs.length === 0) {
+            const o = document.createElement('option'); o.value = "Tópico Único"; o.textContent = "Tópico Único"; sel.appendChild(o);
+          } else {
+            subInputs.forEach(si => {
+              for(let t=1; t<=3; t++) {
+                const o = document.createElement('option');
+                const val = `${si.value} (Tópico ${t})`;
+                o.value = val; o.textContent = val; sel.appendChild(o);
+              }
+            });
+          }
+          sel.value = current || sel.options[0]?.value;
         });
       }
 
@@ -167,8 +179,7 @@
                   <div class="module-info"><span>${mod.name}</span><span>¥${mod.cost.toLocaleString('pt-BR')}</span></div>
                 </div>
                 <div class="module-fields">
-                  <label>Alocar em qual Tópico:</label>
-                  <select class="mod-topic-select"></select>
+                  <label>Alocar em:</label><select class="mod-aloc-select"></select>
                   <input type="text" class="mod-sub" placeholder="Subtítulo">
                   <input type="text" class="mod-img" placeholder="URL da Imagem">
                   <textarea class="mod-desc" placeholder="Descrição narrativa..."></textarea>
@@ -182,41 +193,42 @@
       }
 
       function updateLogic() {
-          const imovel = document.getElementById('f-imovel');
+          const opt = imovelSelect.options[imovelSelect.selectedIndex];
           const trans = document.getElementById('f-transacao');
-          const cost = parseInt(trans.value === 'aluguel' ? imovel.options[imovel.selectedIndex].getAttribute('data-rent') : imovel.options[imovel.selectedIndex].getAttribute('data-buy'));
-          let modCost = 0, modHTML = "", spoilersHTML = "";
+          const cost = parseInt(trans.value === 'aluguel' ? opt.getAttribute('data-rent') : opt.getAttribute('data-buy'));
+          let mCost = 0, mHTML = "", sHTML = "";
           
           document.querySelectorAll('.module-card.active').forEach(card => {
               const cb = card.querySelector('.mod-check');
               const name = cb.getAttribute('data-name');
               const sub = card.querySelector('.mod-sub').value || cb.getAttribute('data-sub-def');
               const img = card.querySelector('.mod-img').value || 'https://i.imgur.com/YUtp3HN.png';
-              const desc = card.querySelector('.mod-desc').value || 'Sem descrição narrativa.';
-              const topic = card.querySelector('.mod-topic-select').value;
+              const desc = card.querySelector('.mod-desc').value || 'Sem descrição.';
+              const aloc = card.querySelector('.mod-aloc-select').value;
               
-              modCost += parseInt(cb.getAttribute('data-cost'));
-              modHTML += `• <b>${name}</b> (Tópico: <i>${topic}</i>)<br>`;
-              spoilersHTML += `[spoiler="CÓDIGO: ${name.toUpperCase()} (${topic.toUpperCase()})"][code]<link href="https://goldenagerpg.github.io/templates.io/moradias.css" rel="stylesheet" type="text/css"><div class="zenin-wrapper"><div class="zenin-header"><img src="${img}" class="zenin-header-img"><div class="zenin-title-overlay"><h1 class="zenin-title">${name}</h1><div class="zenin-subtitle">${sub}</div></div></div><div class="zenin-content"><div class="zenin-kanji">${cb.getAttribute('data-kanji')}</div><div class="zenin-desc"><p>${desc}</p></div></div></div>[/code][/spoiler]`;
+              mCost += parseInt(cb.getAttribute('data-cost'));
+              mHTML += `• <b>${name}</b> [${aloc}]<br>`;
+              sHTML += `[spoiler="CÓDIGO: ${name.toUpperCase()} (${aloc.toUpperCase()})"][code]<link href="https://goldenagerpg.github.io/templates.io/moradias.css" rel="stylesheet" type="text/css"><div class="zenin-wrapper"><div class="zenin-header"><img src="${img}" class="zenin-header-img"><div class="zenin-title-overlay"><h1 class="zenin-title">${name}</h1><div class="zenin-subtitle">${sub}</div></div></div><div class="zenin-content"><div class="zenin-kanji">${cb.getAttribute('data-kanji')}</div><div class="zenin-desc"><p>${desc}</p></div></div></div>[/code][/spoiler]`;
           });
           
-          document.getElementById('total-display').textContent = "¥ " + (cost + modCost).toLocaleString('pt-BR');
-          generateCode(imovel.options[imovel.selectedIndex].text, trans.value, modHTML, (cost + modCost).toLocaleString('pt-BR'), spoilersHTML);
+          document.getElementById('total-display').textContent = "¥ " + (cost + mCost).toLocaleString('pt-BR');
+          generateCode(opt.text, trans.value, mHTML, (cost + mCost).toLocaleString('pt-BR'), sHTML);
       }
 
-      function generateCode(imovelName, transType, modHTML, totalVal, spoilers) {
+      function generateCode(imovelName, transType, mHTML, totalVal, spoilers) {
           const jog = document.getElementById('f-jogador').value || '---', per = document.getElementById('f-personagem').value || '---', prop = document.getElementById('f-nome-prop').value || '---', loc = document.getElementById('f-local').value || '---', obs = document.getElementById('f-obs').value;
-          let topicListHTML = "";
-          document.querySelectorAll('.topic-name-input').forEach(i => topicListHTML += `• ${i.value}<br>`);
+          let struct = "";
+          document.querySelectorAll('.subf-name-input').forEach(si => struct += `• Subfórum: ${si.value} (Contém 3 Tópicos)<br>`);
+          if(!struct) struct = "• Tópico Único<br>";
           
-          const pedidoBase = `<link href="https://gaaaaaaaaabs.github.io/goldenagerepositor.io/combate.css" rel="stylesheet" type="text/css"><div class="combat-container" style="display:block;width:100%;"><div class="combat-header" style="min-height:120px;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div class="combat-header-content" style="position:relative;z-index:5;"><h1 style="font-family:'Yuji Syuku',serif;font-size:2.5em;margin:0;color:#fff;text-shadow:0 0 20px #d4af37;">IMOBILIÁRIA</h1><p style="margin:0;color:#bfc6e6;font-style:italic;">${transType.toUpperCase()} DE PROPRIEDADE</p></div><div class="combat-icon-deco" style="bottom:-35px;--custom-kanji:'家';border-color:#d4af37;"></div></div><div class="combat-content" style="padding:50px 30px 30px 30px;display:block;"><section style="display:block;width:100%;"><h2 style="font-family:'Yuji Syuku',serif;font-size:2.2em;color:#f2e3a1;border-bottom:2px solid #d4af37;padding-bottom:10px;margin-bottom:20px;">${prop}</h2><div class="info-grid-2col" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:30px;"><div class="info-card" style="border-left-color:#d4af37;"><div class="info-title">CLIENTE</div><div class="info-content">${jog} (${per})</div></div><div class="info-card" style="border-left-color:#d4af37;"><div class="info-title">LOCALIZAÇÃO</div><div class="info-content">${loc}</div></div><div class="info-card" style="border-left-color:#d4af37;"><div class="info-title">TIPO</div><div class="info-content">${imovelName}</div></div><div class="info-card" style="border-left-color:#ffd700;"><div class="info-title">TOTAL</div><div class="info-value" style="color:#ffd700;font-size:1.2em;font-weight:bold;">¥ ${totalVal}</div></div></div><h3 style="font-family:'Yuji Syuku',serif;font-size:1.6em;color:#e7e9ff;margin-bottom:15px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">DIVISÃO DE TÓPICOS</h3><div class="quest-item" style="background:rgba(212,175,55,0.05);border:1px solid rgba(255,255,255,0.08);padding:20px;border-radius:8px;margin-bottom:20px;"><div class="quest-content" style="color:#bfc6e6;">${topicListHTML}</div></div><h3 style="font-family:'Yuji Syuku',serif;font-size:1.6em;color:#e7e9ff;margin-bottom:15px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">ALOCAÇÃO DE INSTALAÇÕES</h3><div class="quest-item" style="background:rgba(212,175,55,0.05);border:1px solid rgba(255,255,255,0.08);padding:20px;border-radius:8px;"><div class="quest-content" style="color:#bfc6e6;line-height:1.6;">${modHTML}</div></div><br>${spoilers}</section></div></div>`;
+          const pedidoBase = `<link href="https://gaaaaaaaaabs.github.io/goldenagerepositor.io/combate.css" rel="stylesheet" type="text/css"><div class="combat-container" style="display:block;width:100%;"><div class="combat-header" style="min-height:120px;padding:20px;display:flex;flex-direction:column;align-items:center;justify-content:center;"><div class="combat-header-content" style="position:relative;z-index:5;"><h1 style="font-family:'Yuji Syuku',serif;font-size:2.5em;margin:0;color:#fff;text-shadow:0 0 20px #d4af37;">IMOBILIÁRIA</h1><p style="margin:0;color:#bfc6e6;font-style:italic;">${transType.toUpperCase()} DE PROPRIEDADE</p></div><div class="combat-icon-deco" style="bottom:-35px;--custom-kanji:'家';border-color:#d4af37;"></div></div><div class="combat-content" style="padding:50px 30px 30px 30px;display:block;"><section style="display:block;width:100%;"><h2 style="font-family:'Yuji Syuku',serif;font-size:2.2em;color:#f2e3a1;border-bottom:2px solid #d4af37;padding-bottom:10px;margin-bottom:20px;">${prop}</h2><div class="info-grid-2col" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;margin-bottom:30px;"><div class="info-card" style="border-left-color:#d4af37;"><div class="info-title">CLIENTE</div><div class="info-content">${jog} (${per})</div></div><div class="info-card" style="border-left-color:#d4af37;"><div class="info-title">LOCALIZAÇÃO</div><div class="info-content">${loc}</div></div><div class="info-card" style="border-left-color:#d4af37;"><div class="info-title">TIPO</div><div class="info-content">${imovelName}</div></div><div class="info-card" style="border-left-color:#ffd700;"><div class="info-title">TOTAL</div><div class="info-value" style="color:#ffd700;font-size:1.2em;font-weight:bold;">¥ ${totalVal}</div></div></div><h3 style="font-family:'Yuji Syuku',serif;font-size:1.6em;color:#e7e9ff;margin-bottom:15px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">ESTRUTURA SOLICITADA</h3><div class="quest-item" style="background:rgba(212,175,55,0.05);border:1px solid rgba(255,255,255,0.08);padding:20px;border-radius:8px;margin-bottom:20px;"><div class="quest-content" style="color:#bfc6e6;">${struct}</div></div><h3 style="font-family:'Yuji Syuku',serif;font-size:1.6em;color:#e7e9ff;margin-bottom:15px;border-bottom:1px solid rgba(255,255,255,0.1);padding-bottom:5px;">ALOCAÇÃO DE MÓDULOS</h3><div class="quest-item" style="background:rgba(212,175,55,0.05);border:1px solid rgba(255,255,255,0.08);padding:20px;border-radius:8px;"><div class="quest-content" style="color:#bfc6e6;line-height:1.6;">${mHTML}</div></div><br>${spoilers}</section></div></div>`;
           document.getElementById('output-code').value = pedidoBase.replace(/\n/g, '').replace(/\s\s+/g, ' ');
       }
 
-      imovelSelect.addEventListener('change', updateTopicsInputs);
-      topicsList.addEventListener('input', updateModuleSelects);
+      imovelSelect.addEventListener('change', updateSubfInputs);
+      subfList.addEventListener('input', updateModuleAloc);
       document.getElementById('form-container').addEventListener('input', updateLogic);
-      updateTopicsInputs();
+      updateSubfInputs();
       new ResizeObserver(() => window.parent.postMessage({ frameHeight: document.body.scrollHeight }, '*')).observe(document.body);
       document.getElementById('copy-btn').addEventListener('click', function() {
           const area = document.getElementById('output-code'); area.select(); document.execCommand('copy');
